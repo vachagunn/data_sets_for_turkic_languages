@@ -42,12 +42,19 @@ def get_page(page_index):
     return url, soup
 
 
+def get_news_content(link):
+    one_news = requests.get(link, headers=headers)
+    soup = BeautifulSoup(one_news.text, 'lxml')
+    content = soup.find(class_='itemFullText')
+
+    return content
+
+
 for main_url in main_urls:
     step = 20
     while True:
         hrefs = []
         page_url, page_soup = get_page(step)
-        # check_news(page_soup)
         news_block = page_soup.find_all(class_='itemBlock')
 
         if len(news_block) == 0:
@@ -60,21 +67,16 @@ for main_url in main_urls:
             j = 0
 
             for href in hrefs:
-                print("HREF: ", href)
                 news_text = ''
-                one_news = requests.get(href, headers=headers)
-                print("ONE_NEWS: ", one_news)
-                tmp = one_news.text
-                soup_one_news = BeautifulSoup(tmp, 'lxml')
-                main_content_element = soup_one_news.find(class_='itemFullText')
+                main_content = get_news_content(href)
 
-                if main_content_element:
-                    main_content = main_content_element.find_all('p')
+                if main_content:
+                    paragraphs = main_content.find_all('p')
                 else:
-                    main_content = []
+                    paragraphs = []
 
-                if len(main_content) != 0:
-                    for p in main_content:
+                if len(paragraphs) != 0:
+                    for p in paragraphs:
                         news_text += p.text
                 output_file.write(news_text + "###" + page_url + "###" + main_url + "$$$\n")
                 j += 1

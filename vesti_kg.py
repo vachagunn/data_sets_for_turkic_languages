@@ -38,7 +38,6 @@ def get_page(page_index):
     print("PAGE_URL: ", url)
     page = requests.get(url, headers=headers)
     soup = BeautifulSoup(page.text, 'lxml')
-
     return url, soup
 
 
@@ -46,8 +45,21 @@ def get_news_content(link):
     one_news = requests.get(link, headers=headers)
     soup = BeautifulSoup(one_news.text, 'lxml')
     content = soup.find(class_='itemFullText')
-
     return content
+
+
+def get_news_text(content):
+    text = ''
+
+    if content:
+        paragraphs = main_content.find_all('p')
+    else:
+        paragraphs = []
+
+    if len(paragraphs) != 0:
+        for p in paragraphs:
+            text += p.text
+    return text
 
 
 for main_url in main_urls:
@@ -67,18 +79,9 @@ for main_url in main_urls:
             j = 0
 
             for href in hrefs:
-                news_text = ''
                 main_content = get_news_content(href)
-
-                if main_content:
-                    paragraphs = main_content.find_all('p')
-                else:
-                    paragraphs = []
-
-                if len(paragraphs) != 0:
-                    for p in paragraphs:
-                        news_text += p.text
+                news_text = get_news_text(main_content)
                 output_file.write(news_text + "###" + page_url + "###" + main_url + "$$$\n")
                 j += 1
         step += 20
-        print(step)
+        print(step, "\tPAGE NUMBER: ", int(step / 2))

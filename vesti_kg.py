@@ -30,28 +30,31 @@ headers = {
 }
 
 # Открываем файл vest_kg для для записи
-output_file = open('vesti_kg.txt', 'a', encoding='utf-8')
+output_file = open('vesti_kg_2.txt', 'a', encoding='utf-8')
+
+
+def get_page(page_index):
+    url = main_url + "?start=" + str(page_index)
+    print("PAGE_URL: ", url)
+    page = requests.get(url, headers=headers)
+    soup = BeautifulSoup(page.text, 'lxml')
+
+    return url, soup
 
 
 for main_url in main_urls:
     step = 20
     while True:
         hrefs = []
-        page_url = main_url + "?start=" + str(step)
-        print("PAGE_URL: ", page_url)
-        page = requests.get(page_url, headers=headers)
-        soup = BeautifulSoup(page.text, 'lxml')
-        news_block = soup.find_all(class_='itemBlock')
-        step += 20
+        page_url, page_soup = get_page(step)
+        # check_news(page_soup)
+        news_block = page_soup.find_all(class_='itemBlock')
 
         if len(news_block) == 0:
             break
         for post in news_block:
             if post.find('a'):
                 hrefs.append('https://vesti.kg/' + post.find('a').get('href'))
-
-        print(hrefs)
-        print("PAGE_URL: ", page_url)
 
         if len(hrefs) != 0:
             j = 0
@@ -75,4 +78,5 @@ for main_url in main_urls:
                         news_text += p.text
                 output_file.write(news_text + "###" + page_url + "###" + main_url + "$$$\n")
                 j += 1
+        step += 20
         print(step)
